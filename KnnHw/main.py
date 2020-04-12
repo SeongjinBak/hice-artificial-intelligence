@@ -34,12 +34,12 @@ y_test = y[for_test]
 
 # print(X_train)
 # print(y_train)
-# knn_iris = KNN(10, X_train, y_train, y_name)
+knn_iris = KNN(10, X_train, y_train, y_name)
 # knn_iris.show_dim()
 
 # print(X_train[0])
 # print(knn_iris.distance_metric(X_train[0], X_train[1]))
-
+knn_iris.get_nearest_k(X_test[0])
 # for i in range(y_test.shape[0]):
     # knn_iris.get_nearest_k(X_test[i])
     # print("Test Data: ", i, " Computed class: ", knn_iris.weighted_majority_vote(), ", \tTrue class: ", y_name[y_test[i]])
