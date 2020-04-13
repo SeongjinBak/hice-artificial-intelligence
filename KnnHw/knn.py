@@ -1,18 +1,20 @@
+# B511086 백성진 KNN 과제.
+
 import math
 
 
 class KNN:
     def __init__(self, k, x, y, iris_names):
-        self.k = k
+        self.k = k  # k 값
         self.features = x
         self.target = y
         self.iris_names = iris_names
-        self.weighted_majority_vote_value = 0
-        self.majority_vote_value = ''
-        self.nearest_k = []
-        self.nearest_dist = []
+        self.weighted_majority_vote_value = 0  # 가중치 고려된 majority vote 후 근접한 꽃
+        self.majority_vote_value = ''  # majority vote 후 근접한 꽃
+        self.nearest_k = []  # K 개의 테스트 데이터와 근접한 꽃의 인덱스
+        self.nearest_dist = []  # 테스트 데이터와 K 개의 근접한 꽃의 유클리디안 길이
 
-    # 두 4차원 벡터의 거리를 구한다.
+    # 두 4차원 벡터의 거리를 유클리디안 거리 계산 방식으로 구한다.
     def distance_metric(self, a, b):
         dist = 0
         for i in range(len(self.features[0])):
@@ -35,7 +37,7 @@ class KNN:
             self.nearest_k.append(sdic[iter_cnt][1])
             self.nearest_dist.append((sdic[iter_cnt][0]))
 
-    # 아웃풋은 MV WMV 가 있기 때문에, K가 3개이므로 총 6개를 레포트에 붙혀넣기.
+    # 일반적으로 근접한 k 개 중 가장 많은 수를 차지한 class 를 선정하는 함수.
     def majority_vote(self):
         majority_cnt = []
 
@@ -51,6 +53,8 @@ class KNN:
         self.majority_vote_value = self.iris_names[majority_cnt.index(max(majority_cnt))]
         return self.majority_vote_value
 
+    # 가중치 계산된 majority vote 를 계산하는 함수.
+    # 가중치는 거리의 역수의 로그값이며, 해당하는 class 에 계산된 가중치를 곱한것을 더하는 식으로 분류를 하였음.
     def weighted_majority_vote(self):
         majority_cnt = []
 
@@ -68,11 +72,13 @@ class KNN:
         self.weighted_majority_vote_value = self.iris_names[majority_cnt.index(max(majority_cnt))]
         return self.weighted_majority_vote_value
 
+    # 저장되어 있는 모든 데이터를 리셋한다.
     def reset(self):
         self.weighted_majority_vote_value = 0
         self.majority_vote_value = ''
         self.nearest_k = []
         self.nearest_dist = []
 
+    # dimension 을 반환한다.
     def show_dim(self):
         return len(self.features[0])
