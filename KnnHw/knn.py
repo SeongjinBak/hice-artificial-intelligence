@@ -70,7 +70,6 @@ class KNN:
 
         # 가장 높은 수치를 가진 꽃 class 가 속한 이름을 찾아 저장한다.
         self.weighted_majority_vote_value = self.iris_names[majority_cnt.index(max(majority_cnt))]
-        print(majority_cnt)
         return self.weighted_majority_vote_value
 
     # 저장되어 있는 모든 데이터를 리셋한다.
