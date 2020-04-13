@@ -60,16 +60,17 @@ class KNN:
 
         # class 개수의 길이를 가지는 리스트를 만든다.
         for i in range(len(self.iris_names)):
-            majority_cnt.append(1)
+            majority_cnt.append(0)
 
         # nearest k의 이름에 해당하는 class 의 카운트를 증가시킨다.
         for i in range(self.k):
             # 가중치는 거리의 역수로 취하고, 가중치가 너무 커지는 것을 방지하기 위해 거리의 역수의 로그값을 가중치로 한다.
             weight = math.log10(1 / self.nearest_dist[i])
-            majority_cnt[self.target[self.nearest_k[i]]] += (majority_cnt[self.target[self.nearest_k[i]]] * weight)
+            majority_cnt[self.target[self.nearest_k[i]]] += weight
 
         # 가장 높은 수치를 가진 꽃 class 가 속한 이름을 찾아 저장한다.
         self.weighted_majority_vote_value = self.iris_names[majority_cnt.index(max(majority_cnt))]
+        print(majority_cnt)
         return self.weighted_majority_vote_value
 
     # 저장되어 있는 모든 데이터를 리셋한다.
