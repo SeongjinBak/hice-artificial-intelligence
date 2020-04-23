@@ -64,8 +64,9 @@ class KNN:
 
         # nearest k의 이름에 해당하는 class 의 카운트를 증가시킨다.
         for i in range(self.k):
-            # 가중치는 거리의 역수로 취하고, 가중치가 너무 커지는 것을 방지하기 위해 거리의 역수의 로그값을 가중치로 한다.
-            weight = math.log10(1 / self.nearest_dist[i])
+            # 가중치는 거리의 역수로 취하고, 가중치가 너무 커지는 것을 방지하기 위해 거리+0.01의 역수의 로그값을 가중치로 한다.
+            # 거리 + 0.01 한 이유는, 0으로 나눗셈을 방지하기 위함.
+            weight = math.log10(1 / (self.nearest_dist[i] + 0.01))
             majority_cnt[self.target[self.nearest_k[i]]] += weight
 
         # 가장 높은 수치를 가진 꽃 class 가 속한 이름을 찾아 저장한다.
