@@ -22,9 +22,13 @@ class LogisticRegression:
     def cost(self, batch_size):
         epoch_cost = 0
         local_epoch = 0
+
         while self.current_batch < self.m:
             local_epoch += 1
-            sample = np.random.randint(self.m - batch_size)
+            if self.m == batch_size:
+                sample = 0
+            else:
+                sample = np.random.randint(self.m - batch_size)
             to_batch = self.x[sample:sample + batch_size]
             to_batch_target = self.y[sample:sample + batch_size]
 
@@ -37,13 +41,27 @@ class LogisticRegression:
 
         self.current_batch = 0
         return epoch_cost / local_epoch
+        """
+        tx = func.softmax(np.dot(self.x, self.w))  # m x t 행렬
+        # print(to_batch_target.shape)
+        tcost = np.sum((self.y * np.log(tx)) + (1 - self.y) * np.log(1 - tx), axis=0) * (-1 / 100)
+        return tcost
+        """
+
 
     def learn(self, batch_size):
-        while self.current_batch <= self.m:
-            sample = np.random.randint(self.m - batch_size)
+        while self.current_batch < self.m:
+            if self.m == batch_size:
+                sample = 0
+            else:
+                sample = np.random.randint(self.m - batch_size)
             to_batch = self.x[sample:sample + batch_size]
             to_batch_target = self.y[sample:sample + batch_size]
             self.gradient_decent(to_batch, to_batch_target, batch_size)
+
+            #self.gradient_decent(self.x, self.y, 100)
+            #batch_size += 100
+
             self.current_batch += batch_size
         self.current_batch = 0
 
