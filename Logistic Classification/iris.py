@@ -38,16 +38,21 @@ num = np.unique(y[for_test], axis=0)
 num = num.shape[0]
 y_test = np.eye(num)[y[for_test]].astype(np.int)
 
-li = np.random.randint(1.0, 2.0, 15).reshape(5, 3).astype(np.float64)
+li = np.random.randint(1, 2, (15)).reshape(5, 3).astype(np.float64)
 
+print(li)
 # print(x_train.shape)
 offset = np.array([[1] for i in range(100)])
 x_train = np.append(x_train, offset, 1)
 
-# print(y_train.shape)
-logistic_regression = LogisticRegression(x_train, 100, 5, y_train, li, 0.01)
-# print(logistic_regression.cost())
+logistic_regression = LogisticRegression(x_train, 100, 5, y_train, li, 0.0001)
+# print(logistic_regression.cost(1))
 # print(logistic_regression.gradient_decent())
-logistic_regression.learn(10)
+for i in range(1000):
+    #logistic_regression.learn(5)
+    print("epoch",i, logistic_regression.cost(5))
 for i in range(50):
     logistic_regression.predict(x_test[i], y_test[i])
+
+for i in range(3):
+    print(i, logistic_regression.ailist[i] / logistic_regression.aicount[i])
