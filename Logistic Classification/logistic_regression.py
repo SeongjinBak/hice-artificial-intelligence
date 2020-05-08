@@ -20,21 +20,23 @@ class LogisticRegression:
         self.aicount = [0, 0, 0]
 
     def cost(self, batch_size):
-        epoch = 0
+        epoch_cost = 0
+        local_epoch = 0
         while self.current_batch < self.m:
+            local_epoch += 1
             sample = np.random.randint(self.m - batch_size)
             to_batch = self.x[sample:sample + batch_size]
             to_batch_target = self.y[sample:sample + batch_size]
 
             tx = func.softmax(np.dot(to_batch, self.w))  # m x t 행렬
-            tcost = np.sum((to_batch_target * np.log(tx)) + (1 - to_batch_target) * np.log(1 - tx)) * (-1 / batch_size)
-            #print("epoch : ", epoch, "cost : ", tcost)
-            epoch += 1
+            #print(to_batch_target.shape)
+            tcost = np.sum((to_batch_target * np.log(tx)) + (1 - to_batch_target) * np.log(1 - tx), axis=0) * (-1 / batch_size)
             self.current_batch += batch_size
+            epoch_cost += tcost
             tcost = 0
 
         self.current_batch = 0
-        return tcost
+        return epoch_cost / local_epoch
 
     def learn(self, batch_size):
         while self.current_batch <= self.m:
