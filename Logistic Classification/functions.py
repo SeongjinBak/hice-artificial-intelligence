@@ -2,12 +2,13 @@
 
 import numpy as np
 
-
 # 시그모이드 함수
-def sigmoid(x):
-    # Prevent overflow.
-    signal = np.clip(x, -500, 500)
-    return 1 / (1 + np.exp(-signal))
+eMin = -np.log(np.finfo(type(0.1)).max)
+
+
+def sigmoid(z):
+    zSafe = np.array(np.maximum(z, eMin))
+    return 1.0 / (1 + np.exp(-zSafe))
 
 
 # 소프트맥스 함수
@@ -22,3 +23,4 @@ def softmax(x):
 # 렐루 함수
 def reLU(x):
     return np.maximum(x, 0)
+
