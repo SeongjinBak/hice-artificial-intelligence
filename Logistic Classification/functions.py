@@ -1,11 +1,11 @@
-# B511086 백성진 함수 모음
+"""
+B511086 백성진 함수 모음입니다
+"""
 
 import numpy as np
 
 # 시그모이드 함수
 eMin = -np.log(np.finfo(type(0.1)).max)
-
-
 def sigmoid(z):
     zSafe = np.array(np.maximum(z, eMin))
     return 1.0 / (1 + np.exp(-zSafe))
