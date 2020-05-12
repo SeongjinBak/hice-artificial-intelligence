@@ -33,23 +33,41 @@ for i in sample:
 
 feature_num = 784
 class_num = 10
-learning_rate = 0.005
+learning_rate = 0.005  # multy  0.005 잘됨
+single_lr = True
 
-li = np.random.randint(1, 5, (feature_num + 1) * class_num).reshape((feature_num + 1), class_num).astype(np.float64)
-
+# x 데이터에 1로 된 1개열 추가(바이어스)
 offset = np.array([[1] for i in range(x_train.shape[0])])
 x_train = np.append(x_train, offset, 1)
+# 멀티 LR
+if not single_lr:
+    # weight matrix
+    li = np.random.randint(1, 5, (feature_num + 1) * class_num).reshape((feature_num + 1), class_num).astype(np.float64)
+    logistic_regression = LogisticRegression(x_train, x_train.shape[0], feature_num + 1, t_train, li, learning_rate)
 
-logistic_regression = LogisticRegression(x_train, x_train.shape[0], feature_num + 1, t_train, li, learning_rate)
-
+if single_lr:
+    # weight matrix
+    li = np.random.rand((feature_num + 1)).reshape(feature_num + 1, 1).astype(np.float64)
+    # targets
+    # 숫자 0 을 분류하고 싶은 경우, 인덱스가 0인 것을 제외하고 다 0으로.
+    search_class_num = 5
+    y_train = np.zeros(t_train.shape[0])
+    for i in range(t_train.shape[0]):
+        ai = np.argmax(t_train[i])
+        if ai == search_class_num:
+            y_train[i] = 1
+        else:
+            y_train[i] = 0
+    y_train = y_train.reshape(60000, 1)
+    logistic_regression = LogisticRegression(x_train, x_train.shape[0], feature_num + 1, y_train, li, learning_rate,
+                                             True)
 # epoch
-for i in range(100):
+# multi epoch 100, 1000, 0.005
+for i in range(1000):
     logistic_regression.learn(1000)
     print("epoch", i, logistic_regression.cost(1000))
 
-for i in range(size):
-    logistic_regression.predict(sample_test_image[i], sample_test_label[i])
-
-for i in range(10):
-    if logistic_regression.aicount[i] != 0:
-        print(i, logistic_regression.ailist[i] / logistic_regression.aicount[i])
+if not single_lr:
+    logistic_regression.predict(sample_test_image, sample_test_label, size)
+if single_lr:
+    logistic_regression.predict(sample_test_image, sample_test_label, size, search_class_num)

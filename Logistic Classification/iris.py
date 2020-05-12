@@ -36,19 +36,41 @@ y_test = np.eye(num)[y[for_test]].astype(np.int)
 feature_num = 4
 class_num = 3
 learning_rate = 0.001
+single_lr = True
 
-li = np.random.randint(1, 5, (feature_num + 1) * class_num).reshape(feature_num + 1, class_num).astype(np.float64)
+# x 데이터에 1로 된 1개열 추가(바이어스)
 offset = np.array([[1] for i in range(x_train.shape[0])])
 x_train = np.append(x_train, offset, 1)
 
-logistic_regression = LogisticRegression(x_train, x_train.shape[0], feature_num + 1, y_train, li, learning_rate)
+# 멀티 LR
+if not single_lr:
+    # weight matrix
+    li = np.random.randint(1, 5, (feature_num + 1) * class_num).reshape(feature_num + 1, class_num).astype(np.float64)
+    logistic_regression = LogisticRegression(x_train, x_train.shape[0], feature_num + 1, y_train, li, learning_rate)
 
-for i in range(1000):
-    logistic_regression.learn(100)
-    print("epoch", i, logistic_regression.cost(100))
+# 싱글 LR
+if single_lr:
+    # weight matrix
+    li = np.random.rand((feature_num + 1)).reshape(feature_num + 1, 1).astype(np.float64)
+    # targets
+    # setosa 를 분류하고 싶은 경우, 인덱스가 0인 것을 제외하고 다 0으로.
+    search_class_num = 2
+    y_train = np.zeros(y[for_train].shape[0])
+    for i in range(y[for_train].shape[0]):
+        if y[for_train][i] == search_class_num:
+            y_train[i] = 1
+        else:
+            y_train[i] = 0
+    print(y_train.shape)
+    logistic_regression = LogisticRegression(x_train, x_train.shape[0], feature_num + 1, y_train, li, learning_rate,
+                                             True)
+# 학습과 cost 계산
+for i in range(10000):
+    logistic_regression.learn(8)
+    cost = logistic_regression.cost(8)
+    print("epoch", i, "|", cost)
 
-for i in range(x_test.shape[0]):
-    logistic_regression.predict(x_test[i], y_test[i])
-
-for i in range(3):
-    print(i, logistic_regression.ailist[i] / logistic_regression.aicount[i])
+if not single_lr:
+    logistic_regression.predict(x_test, y_test, x_test.shape[0])
+if single_lr:
+    logistic_regression.predict(x_test, y_test, x_test.shape[0], search_class_num)
