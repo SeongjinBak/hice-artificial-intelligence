@@ -20,7 +20,7 @@ from dataset.mnist import load_mnist
 label_name = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 # test data 개수
-size = 10000
+size = 100
 
 # 0~10000 사이의 랜덤한 size 개 만큼의 데이터 인덱스 선정
 sample = np.random.randint(0, t_test.shape[0], size)
@@ -35,8 +35,8 @@ for i in sample:
 # Logistic Regression 을 위한 상세 파라미터 지정
 feature_num = 784
 class_num = 10
-learning_rate = 0.0005  # multi  0.005 잘됨
-single_lr = True    # True 면, Single class lr, False 면 Multiple class lr
+learning_rate = 0.001
+single_lr = False    # True 면, Single class lr, False 면 Multiple class lr
 
 # x 데이터에 1로 된 1개열 추가(바이어스)
 offset = np.array([[1] for i in range(x_train.shape[0])])
@@ -55,7 +55,7 @@ if single_lr:
     li = np.random.rand((feature_num + 1)).reshape(feature_num + 1, 1).astype(np.float64)
     # targets
     # 숫자 0 을 분류하고 싶은 경우, 인덱스가 0인 것을 제외하고 다 0으로 변환.
-    search_class_num = 5
+    search_class_num = 9
     y_train = np.zeros(t_train.shape[0])    # 0인 배열 생성
     for i in range(t_train.shape[0]):
         ai = np.argmax(t_train[i])          # one hot encoding 된 것들 중 가장 큰것은 1이며, 그 인덱스 반환
@@ -75,10 +75,11 @@ count_list = []
 # 학습과 그 Cost 계산. 함수의 매개변수는 몇개의 데이터를 한번에 학습시킬지를 의미.
 
 # epoch
+epoch = 100
 # multi epoch 100, 1000, 0.005
-for i in range(100):
-    logistic_regression.learn(2000)     # 학습
-    cost = logistic_regression.cost(2000)   # 코스트
+for i in range(epoch):
+    logistic_regression.learn(10)     # 학습
+    cost = logistic_regression.cost(10)   # 코스트
     print("epoch", i, cost)
     cost_list.append(cost)
     count_list.append(i + 1)
@@ -93,8 +94,8 @@ plt.show()
 
 # Multiple class logistic regression 에서의 예측
 if not single_lr:
-    logistic_regression.predict(sample_test_image, sample_test_label, size)
+    logistic_regression.predict(sample_test_image, sample_test_label, size, 0, epoch, "MNIST")
 
 # Single class logistic regression 에서의 예측
 if single_lr:
-    logistic_regression.predict(sample_test_image, sample_test_label, size, search_class_num)
+    logistic_regression.predict(sample_test_image, sample_test_label, size, search_class_num, epoch, "MNIST")
