@@ -24,18 +24,12 @@ class LogisticRegression:
         self.t = fsize  # iris 4 + 1, mnist 784+1
         self.w = w
         self.lr = learning_rate
-        self.ailist = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        self.aicount = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.issingle = issingle
 
     # 코스트 함수. batch_size 개 만큼의 계산을 한꺼번에 한다.
     def cost(self, batch_size):
-        # 0 ~ m 중 랜덤으로 batch_size 개를 뽑는다.
-        sample = np.array(np.random.randint(0, self.m, batch_size))
-        # 뽑은것으로 x 데이터와 y 데이터를 넣는다.
-        to_batch = np.array([self.x[i] for i in sample])
-        to_batch_target = np.array([self.y[i] for i in sample])
-
+        to_batch = self.x
+        to_batch_target = self.y
         # Hypothesis
         tx = sigmoid(np.dot(to_batch, self.w))  # m x t 행렬
 
@@ -49,6 +43,8 @@ class LogisticRegression:
 
         # Single class lr 인 경우, 한꺼번에 계산을 실시한다.
         else:
+            tx = tx.reshape(self.m, )  # m의 크기의 1차원 배열로 바꾼다.
+            to_batch_target = to_batch_target.reshape(self.m, )  # m의 크기의 1차원 배열로 바꾼다.
             tcost = np.sum(
                 (to_batch_target * np.log(tx + epsilon)) + (1 - to_batch_target) * np.log(1 - tx + epsilon)) * (
                             -1 / batch_size)
@@ -56,19 +52,15 @@ class LogisticRegression:
 
     # 학습함수. batch_size 만큼의 데이터를 한꺼번에 학습한다.
     def learn(self, batch_size):
-        # 0 ~ m 개의 데이터 중 batch_size 만큼의 데이터를 랜덤으로 선출 후 계산용 배열에 추가한다.
-        sample = np.array(np.random.randint(0, self.m, batch_size))
-        to_batch = np.array([self.x[i] for i in sample])
-        to_batch_target = np.array([self.y[i] for i in sample])
-
+        to_batch = self.x
+        to_batch_target = self.y
         # Gradient decent 계산하여 weight 최신화 한다.
         self.gradient_decent(to_batch, to_batch_target, batch_size)
 
     # 경사 하강법 함수
     def gradient_decent(self, batch_x, batch_y, batch_size):
         tx = sigmoid(np.dot(batch_x, self.w))  # m x t 행렬
-
-        # 피쳐 개수 만큼 반복문을 돌며 theta(weight) 최신화 한다.
+        # 피쳐 개수 만큼 반복문을 돌며 피쳐에 대한 theta(weight)를 최신화 한다.
         for i in range(self.t):  # iris 에서는 t가 3, mnist 에서는 t가 10
             # x의 i번째 열 을 다 가져온다.
             x = batch_x[:, i]
@@ -82,6 +74,9 @@ class LogisticRegression:
 
             # single class weights 최신화
             else:
+                tx = tx.reshape(self.m, )  # m의 크기의 1차원 배열로 바꾼다.
+                xj = xj.reshape(self.m, )  # m의 크기의 1차원 배열로 바꾼다.
+                batch_y = batch_y.reshape(self.m, )  # m의 크기의 1차원 배열로 바꾼다.
                 tsum = self.lr * np.sum((tx - batch_y) * xj)
                 self.w[i] = self.w[i] - tsum
 
@@ -92,9 +87,6 @@ class LogisticRegression:
 
         # 테스트 케이스의 사이즈만큼 루프를 돈다.
         for i in range(sz):
-            if not self.issingle:
-                single_try += 1
-
             t_x = x[i]
             t_y = y[i]
 
@@ -108,14 +100,6 @@ class LogisticRegression:
             qi = np.argmax(tx)
             ai = np.argmax(t_y)
 
-            # 각각의 클래스의 정확도 판별용 코드
-            self.aicount[ai] += 1
-
-            # 추정된 클래스와 진짜 클래스가 같은 경우(예측성공)    
-            if ai == qi and not self.issingle:
-                self.ailist[qi] += 1
-                single_cnt += 1
-
             # Single class lr의 경우
             if self.issingle:
                 # 모든 데이터 중, 분류하려는 클래스와 정답 클래스가 일치하는 경우
@@ -125,6 +109,13 @@ class LogisticRegression:
                         single_cnt += 1
                     single_try += 1
 
+            # Multiple class lr 의 경우
+            if not self.issingle:
+                # 추정된 클래스의 인덱스와 와 타겟 클래스의 인덱스가 같은 경우(예측성공)
+                if ai == qi:
+                    single_cnt += 1
+                single_try += 1
+
         # Multiple class lr
         if not self.issingle:
             print(dataset_name, "|정확도 : ", single_cnt / single_try, "|", "Learning rate", self.lr, "|", "Epoch",
@@ -132,5 +123,5 @@ class LogisticRegression:
 
         # Single class lr
         else:
-            print(dataset_name, "분류하고자 한클래스 : ", to_find_target, "|", "정확도 : ", single_cnt / single_try, "|",
+            print(dataset_name, "분류하고자한 클래스 : ", to_find_target, "|", "정확도 : ", single_cnt / single_try, "|",
                   "Learning rate", self.lr, "|", "Epoch", epoch)
