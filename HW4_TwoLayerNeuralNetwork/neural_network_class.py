@@ -6,7 +6,7 @@ import numpy as np
 
 class NeuralNetworkClass:
     # 생성자 매개변수 : 입력층의 노드 수, 은닉층의 노드 수, 출력층의 노드 수
-    def __init__(self, input_size, hidden_size, output_size, learning_rate):
+    def __init__(self, input_size, hidden_size, output_size):
         # 가중치를 정규분포 된 랜덤 값으로 지정
         # W1: x --> hidden layer
         # W2: hidden layer --> output layer
@@ -23,13 +23,23 @@ class NeuralNetworkClass:
         self.batch_x = 0
         self.batch_t = 0
 
-        # 학습률
-        self.lr = learning_rate
+        # 훈련용 데이터
+        self.x_train = None
+        self.y_train = None
+
+        # 테스트용 데이터
+        self.x_test = None
+        self.y_test = None
+
+        # 결과 기록 리스트
+        self.loss_list = []
+        self.acc_list = []
 
     """
     예측함수 입니다. 매개변수로 받는 x로 예측을 원하는 데이터가 들어옵니다.
     본 과제에서는 층이 2개 입니다.
     """
+
     def predict(self, x):
 
         # 입력 -> 1층 단계 입니다.
@@ -49,9 +59,9 @@ class NeuralNetworkClass:
     본 과제에서는 미니배치를 사용하기 때문에, 매번 새로운 입력 데이터가 들어옵니다.
     이 입력데이터와 정답 데이터를 매개변수로 넘기지 않고, 클래스의 멤버변수로 지정한 데이터를 가져옵니다.
     """
-    def loss(self):
+
+    def loss(self, x, t):
         # x는 입력데이터, t는 정답데이터 입니다.
-        x, t = self.get_batch_data()
         # y 에 입력데이터를 예측한 결과를 저장합니다. 결과는 batch_size, 3의 형상을 가집니다.
         y = self.predict(x)
         # 예측 결과를 교차 엔트로피 함수로 실제 값과 예측값의 오차를 계산합니다.
@@ -63,6 +73,7 @@ class NeuralNetworkClass:
     훈련용 데이터, 테스트 데이터의 정확도를 계산하는데 쓰이므로, 범용성을 위해 미니배치 데이터로 예측을 하는것이 아닌
     매개변수로 들어온 값으로 예측을 하도록 하였습니다.
     """
+
     def accuracy(self, x, t):
         # 예측
         y = self.predict(x)
@@ -89,14 +100,28 @@ class NeuralNetworkClass:
     def get_batch_data(self):
         return self.batch_x, self.batch_t
 
+    # 전체 훈련용 데이터를 저장합니다.
+    def set_train_data(self, x, t):
+        self.y_train = t
+        self.x_train = x
+
+    # 전체 테스트용 데이터를 저장합니다.
+    def set_test_data(self, x, t):
+        self.y_test = t
+        self.x_test = x
+
+
+
     """
     기울기 계산 함수.
     매개변수 x로 가중치 파라미터를 전달받습니다.
     가중치 파라미터의 각 value 로 수치미분을 진행합니다.
     딕셔너리의 value 는 mutable 하므로, 함수 내부에서 변형시키면 원본 딕셔너리에 영향이 갑니다.
     따라서, value 를 수정한 후, loss 진행을 하며 그 후 원래의 값으로 되돌립니다.
+    x는 가중치 파라미터이며, ix는 배치 데이터, t는 배치 타겟 데이터 입니다.
     """
-    def calculate_gradient(self, x):
+
+    def calculate_gradient(self, x, ix, t):
         # 아주 작은 h 값.
         h = 1e-4
 
@@ -105,7 +130,6 @@ class NeuralNetworkClass:
 
         # 넘어온 가중치의 각 value 당 루프를 돌며, 수치미분을 합니다.
         for idx in range(len(x)):
-
             # 넘어온 가중치의 value 저장.
             tmp_val = x[idx]
 
@@ -113,13 +137,13 @@ class NeuralNetworkClass:
             x[idx] = float(tmp_val) + h
 
             # x + h 가중치로 손실 측정
-            fxh1 = self.loss()
+            fxh1 = self.loss(ix, t)
 
             # f(x-h) 계산
             x[idx] = tmp_val - h
 
             # x - h 가중치로 손실 측정
-            fxh2 = self.loss()
+            fxh2 = self.loss(ix, t)
 
             # 기울기 계산
             gradients[idx] = (fxh1 - fxh2) / (2 * h)
@@ -134,7 +158,8 @@ class NeuralNetworkClass:
     본 과제의 모든 가중치에 대해 기울기를 최신화 합니다.
     bias 값은 1차원 이지만, W 값은 2차원 행렬 이므로 각 행의 모든 열에 대해 기울기 계산을 해줍니다.
     """
-    def numerical_gradient(self):
+
+    def numerical_gradient(self, x, t):
         # 저장할 가중치 딕셔너리
         gradients = {}
 
@@ -142,7 +167,7 @@ class NeuralNetworkClass:
         grad = np.zeros_like(self.params['W1'])
         # input 행 당 모든 열에 대해 진행
         for i in range(len(self.params['W1'])):
-            grad[i] = self.calculate_gradient(self.params['W1'][i])
+            grad[i] = self.calculate_gradient(self.params['W1'][i], x, t)
 
         gradients['W1'] = grad
 
@@ -150,13 +175,13 @@ class NeuralNetworkClass:
         grad = np.zeros_like(self.params['W2'])
         # hidden layer 행 당 모든 열에 대해 진행
         for i in range(len(self.params['W2'])):
-            grad[i] = self.calculate_gradient(self.params['W2'][i])
+            grad[i] = self.calculate_gradient(self.params['W2'][i], x, t)
 
         gradients['W2'] = grad
 
         # bias 에 대해 진행. b1 은 hidden layer, b2 는 output 의 개수.
-        gradients['b1'] = self.calculate_gradient(self.params['b1'])
-        gradients['b2'] = self.calculate_gradient(self.params['b2'])
+        gradients['b1'] = self.calculate_gradient(self.params['b1'], x, t)
+        gradients['b2'] = self.calculate_gradient(self.params['b2'], x, t)
 
         return gradients
 
@@ -164,16 +189,55 @@ class NeuralNetworkClass:
     학습 함수 입니다.
     배치 데이터를 받아와, 그 데이터에 대해 가중치의 기울기 값을 구한 후, 가중치를 최신화 합니다.
     """
-    def learn(self):
-        # 배치 데이터 얻음.
-        x, t = self.get_batch_data()
-        # 각 가중치의 예측 후의 손실 값 얻음.
-        gradients = self.numerical_gradient()
-        # 최신화 된 값을 학습률에 곱하여, 원래의 가중치에서 뺌.
-        self.params['W1'] -= self.lr * gradients['W1']
-        self.params['b1'] -= self.lr * gradients['b1']
-        self.params['W2'] -= self.lr * gradients['W2']
-        self.params['b2'] -= self.lr * gradients['b2']
+
+    def learn(self, lr, epoch, batch_size):
+
+        # 1번의 epoch 를 수행하기 위한 반복 횟수
+        iter_num = int(120 / batch_size)
+
+        # 매개변수로 들어온 epoch 횟수만큼 반복합니다.
+        for i in range(epoch):
+
+            tmpLoss = 0.0
+
+            # 120개의 데이터를 batch size 만큼 나누어 진행합니다.
+            for j in range(iter_num):
+                # 미니배치 획득 ( 120개 중 batch size 개 만큼) 합니다.
+                batch_sample = np.random.choice(120, batch_size)
+
+                # 얻어낸 샘플 데이터의 인덱스를 batch 데이터로 할당합니다.
+                x_batch = self.x_train[batch_sample]
+                y_batch = self.y_train[batch_sample]
+
+                self.set_batch_data(x_batch, y_batch)
+
+                # 각 가중치의 예측 후의 손실 값 얻음.
+                gradients = self.numerical_gradient(x_batch, y_batch)
+
+                # 최신화 된 값을 학습률에 곱하여, 원래의 가중치에서 뺌.
+                self.params['W1'] -= lr * gradients['W1']
+                self.params['b1'] -= lr * gradients['b1']
+                self.params['W2'] -= lr * gradients['W2']
+                self.params['b2'] -= lr * gradients['b2']
+
+                # 손실값 기록
+                tmpLoss += self.loss(x_batch, y_batch)
+
+            # 훈련 데이터의 손실 평균과, 정확도 측정
+            train_loss = tmpLoss / iter_num
+            train_acc = self.accuracy(self.x_train, self.y_train)
+
+            print(i, 'cost, accuracy', train_loss, train_acc)
+
+            # 손실값 평균 저장
+            self.loss_list.append(train_loss)
+            # 정확도 저장
+            self.acc_list.append(train_acc)
+
+            # 최종 정확도를 출력합니다.
+            if i + 1 == epoch:
+                print('Training Accuracy =', train_acc)
+                print('Test Accuracy =', self.accuracy(self.x_test, self.y_test))
 
 
 # 시그모이드 함수
@@ -185,7 +249,6 @@ def sigmoid(z):
 
 # 소프트맥스 함수
 def softmax(x):
-
     # 뺄셈 계산을 위해 (x.shape[0], )를 (x.shape[0], 3)으로 변환합니다.
     # 각 행당 가장 큰 값을 얻음
     t = np.max(x, axis=1)
