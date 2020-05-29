@@ -33,7 +33,7 @@ num = num.shape[0]
 y_test = np.eye(num)[y[for_test]].astype(np.int)
 
 # 학습 반복 횟수
-epoch = 200 * 5
+epoch = 20
 # 입력 훈련용 데이터의 크기
 train_size = x_train.shape[0]
 # 배치 사이즈. 120개 중 batch_size 개를 사용합니다.
@@ -51,10 +51,6 @@ two_layer_network.set_train_data(x_train, y_train)
 
 # 테스트용 데이터 저장
 two_layer_network.set_test_data(x_test, y_test)
-
-# 최종 정확도를 위한 변수 입니다.
-final_test_acc = None
-final_training_acc = None
 
 # 미니배치로 학습을 실시합니다.
 # 학습은 총 epoch 번 이루어 지며, epoch 당 batch_size 만큼 나누어 진행됩니다.
